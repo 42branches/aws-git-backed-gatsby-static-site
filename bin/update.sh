@@ -6,6 +6,7 @@ aws cloudformation update-stack \
   --capabilities CAPABILITY_IAM \
   --parameters \
     ParameterKey=DomainName,ParameterValue=$DOMAIN_NAME \
+    ParameterKey=PreExistingCertificate,ParameterValue=$ACM_ARN \
     ParameterKey=NotificationEmail,ParameterValue=$NOTIFICATION_EMAIL \
     ParameterKey=GitHubOwner,ParameterValue=$GITHUB_OWNER \
     ParameterKey=GitHubRepo,ParameterValue=$GITHUB_REPO \

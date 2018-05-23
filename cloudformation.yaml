@@ -75,6 +75,11 @@ Parameters:
     Type: String
     Default: ""
 
+  PreExistingCertificate:
+    Description: "Optional arn of pre-existing ACM in us-east-1. Leave empty to have one created and managed by this stack."
+    Type: String
+    Default: ""
+
   PreExistingSiteBucket:
     Description: "Optional name of pre-existing website bucket. Leave empty to have website bucket created and managed by this stack."
     Type: String
@@ -97,6 +102,7 @@ Parameters:
 
 Conditions:
   NeedsNewHostedZone: !Equals [!Ref PreExistingHostedZoneDomain, ""]
+  NeedsNewCertificate: !Equals [!Ref PreExistingCertificate, ""]
   NeedsNewSiteBucket: !Equals [!Ref PreExistingSiteBucket, ""]
   NeedsNewRedirectBucket: !Equals [!Ref PreExistingRedirectBucket, ""]
   NeedsNewLogsBucket: !Equals [!Ref PreExistingLogsBucket, ""]
@@ -157,6 +163,7 @@ Resources:
 
   # Certificate for HTTPS accesss through CloudFront
   Certificate:
+    Condition: NeedsNewCertificate
     Type: "AWS::CertificateManager::Certificate"
     Properties:
       DomainName: !Ref DomainName
@@ -200,7 +207,7 @@ Resources:
           Prefix: !Sub "logs/cloudfront/${DomainName}/"
           IncludeCookies: false
         ViewerCertificate:
-          AcmCertificateArn: !Ref Certificate
+          AcmCertificateArn: !If [NeedsNewCertificate, !Ref Certificate, !Ref PreExistingCertificate]
           SslSupportMethod: sni-only
 
   # CDN serves S3 content over HTTPS for www.example.com
@@ -238,7 +245,7 @@ Resources:
           Prefix: !Sub "logs/cloudfront/www.${DomainName}/"
           IncludeCookies: false
         ViewerCertificate:
-          AcmCertificateArn: !Ref Certificate
+          AcmCertificateArn: !If [NeedsNewCertificate, !Ref Certificate, !Ref PreExistingCertificate]
           SslSupportMethod: sni-only
 
   # DNS: example.com, www.example.com
@@ -491,6 +498,7 @@ Metadata:
           default: PreExisting Resources To Use (Leave empty for stack to create and manage)
         Parameters:
           - PreExistingHostedZoneDomain
+          - PreExistingCertificate
           - PreExistingSiteBucket
           - PreExistingRedirectBucket
           - PreExistingLogsBucket
